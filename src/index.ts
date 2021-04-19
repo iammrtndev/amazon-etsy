@@ -1,14 +1,16 @@
 import puppeteer from 'puppeteer-extra';
 import puppeteerStealth from 'puppeteer-extra-plugin-stealth';
 import { LaunchOptions } from 'puppeteer';
-import { executablePath, userDataDir } from '../chromePath.json';
+import { homedir } from 'os';
 
 puppeteer.use(puppeteerStealth());
 
+const userDir = homedir().replace(/\\/g, '/');
+
 const options: LaunchOptions = {
   headless: false,
-  executablePath: executablePath,
-  userDataDir: userDataDir,
+  executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  userDataDir: `${userDir}/AppData/Local/Google/Chrome/User Data`,
   ignoreHTTPSErrors: true,
   args: [
     '--no-sandbox',
