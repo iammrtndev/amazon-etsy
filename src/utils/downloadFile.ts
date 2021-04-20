@@ -2,7 +2,7 @@ import path from 'path';
 import axios from 'axios';
 import fs from 'fs';
 
-export default async function downloadImage(
+export default async function downloadFile(
   url: string,
   output: string
 ): Promise<string> {
