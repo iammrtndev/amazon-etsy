@@ -22,5 +22,5 @@
     "resolveJsonModule": true
   },
   "include": ["./src/**/*.tsx", "./src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "./test/**/*.spec.ts"]
+  "exclude": ["node_modules", "build", "./test/**/*.spec.ts"]
 }
