@@ -5,6 +5,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "axios": "^0.21.1",
     "puppeteer": "npm:puppeteer-core@^5.0.0",
     "puppeteer-extra": "^3.1.18",
     "puppeteer-extra-plugin-stealth": "^2.7.6"
