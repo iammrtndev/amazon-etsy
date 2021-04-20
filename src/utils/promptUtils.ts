@@ -6,9 +6,11 @@ const UI = readline.createInterface({
 });
 
 export async function promptInputAsync(question: string): Promise<string> {
+  UI.resume();
   return new Promise((resolve) => {
     UI.question(question, (answer) => {
       resolve(answer);
+      UI.pause();
     });
   });
 }
