@@ -34,7 +34,8 @@ async function getURLs(relavtivePath: string) {
   if (fs.existsSync(absolutePath)) {
     urls = fs.readFileSync(absolutePath, { encoding: 'utf8' }).split('\n');
   }
-  if (urls.length == 1 && urls[0].length == 0) {
+  urls = urls.filter((url) => isURL(url));
+  if (urls.length == 0) {
     urls = await promptInputsAsync('Amazon product url: ');
   }
 
