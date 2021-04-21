@@ -3,9 +3,9 @@ import { AmazonProduct } from '../models/AmazonProduct';
 import JPGImage from './JPGImage';
 
 export default class AmazonPuppeteer {
-  async scrapeProduct(url: string) {
+  async scrapeProduct(url: string, headless: boolean) {
     const browser = await puppeteer.launch({
-      headless: false,
+      headless,
       args: ['--disable-web-security'],
     });
     const page = await browser.newPage();
