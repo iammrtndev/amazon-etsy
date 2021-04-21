@@ -55,6 +55,7 @@ export default class AmazonPuppeteer {
         imageURLs.push(...URLs);
       }
     } else {
+      await page.waitForSelector('#litb-read-frame');
       const frame = await (await page.$('#litb-read-frame'))!.contentFrame();
       await frame?.evaluate(() => {
         document
