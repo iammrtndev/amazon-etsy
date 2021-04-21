@@ -17,12 +17,12 @@ export async function promptInputAsync(question: string): Promise<string> {
 
 export async function promptInputsAsync(question: string) {
   const inputs: string[] = [];
-  do {
+  while (inputs[inputs.length - 1] !== '') {
     const input = await promptInputAsync(
       `${question} (leave blank to finish)\n`
     );
     inputs.push(input);
-  } while (inputs[inputs.length - 1] !== '');
+  }
   inputs.pop();
   return inputs;
 }
