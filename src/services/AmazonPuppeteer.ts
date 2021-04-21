@@ -15,12 +15,19 @@ export default class AmazonPuppeteer {
 
     const { title, description, details, price } = await page.evaluate(
       async () => {
+        // @ts-ignore
         const title = document.querySelector('#productTitle')!.innerText;
+
         const description = document
           .querySelector('#bookDesc_iframe')!
+          // @ts-ignore
           .contentWindow.document.querySelector('#iframeContent')!.innerText;
-        const details = document.querySelector('#detailBullets_feature_div')!
-          .innerText;
+
+        const details =
+          // @ts-ignore
+          document.querySelector('#detailBullets_feature_div')!.innerText;
+
+        // @ts-ignore
         const price = document.querySelector('#price')!.innerText;
         return { title, description, details, price };
       }
@@ -41,6 +48,7 @@ export default class AmazonPuppeteer {
         await page.waitForTimeout(1000);
         const URLs = await page.evaluate(() =>
           Array.from(document.querySelectorAll('.imageOverlay+img')).map(
+            // @ts-ignore
             (img) => img.src
           )
         );
@@ -53,9 +61,10 @@ export default class AmazonPuppeteer {
           .querySelector('#litb-renderer')!
           .scroll({ top: 9999, behavior: 'smooth' });
       });
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(5000);
       imageURLs = await frame!.evaluate(() =>
         Array.from(document.querySelectorAll('#yj-html-render div img')).map(
+          // @ts-ignore
           (img) => img.src
         )
       );
