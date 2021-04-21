@@ -59,18 +59,8 @@ export default class AmazonPuppeteer {
           (img) => img.src
         )
       );
-
-      // imageURLs = await page.evaluate(() => {
-      //   const readerFrame = document.querySelector('#litb-read-frame')!
-      //     .contentWindow.document;
-      //   readerFrame
-      //     .querySelector('#litb-renderer')!
-      //     .scroll({ top: 9999, behavior: 'smooth' });
-      //   return Array.from(
-      //     readerFrame.querySelectorAll('#yj-html-render div img')
-      //   ).map((img) => img.src);
-      // });
     }
+    await browser.close();
     imageURLs = [...new Set(imageURLs)];
 
     const loadPromises = [];
