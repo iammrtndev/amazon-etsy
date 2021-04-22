@@ -6,6 +6,7 @@ import { Browser, LaunchOptions } from 'puppeteer';
 import PuppeteerService from '../models/PuppeteerService';
 import { AmazonProduct } from '../models/AmazonProduct';
 import { randomInt } from 'crypto';
+import { homedir } from 'os';
 
 export default class EtsyPuppeteer extends PuppeteerService {
   protected browser: Browser | undefined;
@@ -16,7 +17,10 @@ export default class EtsyPuppeteer extends PuppeteerService {
     this.launchOptions = {
       headless,
       executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
-      userDataDir: 'C:/Users/dev/AppData/Local/Google/Chrome/User Data',
+      userDataDir: `${homedir().replace(
+        /\\/g,
+        '/'
+      )}/AppData/Local/Google/Chrome/User Data`,
       ignoreHTTPSErrors: true,
       args: [
         '--no-sandbox',
