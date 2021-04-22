@@ -25,22 +25,26 @@ async function main() {
     console.log(products);
     console.log(errors);
   }
+  await amazonScraper.browser?.close();
 }
 
-async function getURLs(relavtivePath: string) {
+async function getURLs(txtDir: string) {
   let urls: string[] = [];
+  const formatURLs = () => {
+    urls = urls.map((url) => url.trim());
+    urls = urls.filter((url) => isURL(url));
+  };
 
-  const absolutePath = path.resolve(relavtivePath);
+  const absolutePath = path.resolve(txtDir);
   if (fs.existsSync(absolutePath)) {
     urls = fs.readFileSync(absolutePath, { encoding: 'utf8' }).split('\n');
   }
-  urls = urls.filter((url) => isURL(url));
+  formatURLs();
+  // If {txtDir} file is empty
   if (urls.length == 0) {
     urls = await promptInputsAsync('Amazon product url: ');
   }
-
-  urls = urls.map((url) => url.trim());
-  urls = urls.filter((url) => isURL(url));
+  formatURLs();
   return [...new Set(urls)];
 }
 
