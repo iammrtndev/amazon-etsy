@@ -3,7 +3,6 @@ import axios from 'axios';
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
-import filenamify from 'filenamify';
 
 interface resizeOptions {
   width?: number;
@@ -16,7 +15,7 @@ export default class JPGImage {
   latestSavePath: string | undefined;
 
   constructor(name: string) {
-    this.name = filenamify(name, { replacement: '' }).replace(/\s/g, '_');
+    this.name = name;
   }
 
   async loadAsync(url: string) {
