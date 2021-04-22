@@ -45,12 +45,12 @@ export default class EtsyPuppeteer extends PuppeteerService {
         waitUntil: 'networkidle2',
       }
     );
-    const typeOptions = { delay: randomInt(50, 100) };
+    const typeOptions = { delay: randomInt(90, 120) };
     // Upload images
     const imageUploadInput = await page.$('#listing-edit-image-upload');
     const imagesPaths = product.images.map((image) => image.latestSavePath);
     await imageUploadInput?.uploadFile(...imagesPaths);
-    await page.waitForTimeout(randomInt(3000, 6000));
+    await page.waitForTimeout(randomInt(6000, 9000));
     // Fill title
     await clipboardy.write(product.title);
     await page.focus('#title-input');
@@ -58,7 +58,7 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.keyboard.press('V');
     await page.keyboard.up('Control');
     await page.waitForTimeout(randomInt(1000, 3000));
-    // Select options
+    // Select infos
     await page.type('#who_made-input', 'I', typeOptions);
     await page.waitForTimeout(randomInt(1000, 3000));
     await page.type('#is_supply-input', 'A', typeOptions);
@@ -68,21 +68,26 @@ export default class EtsyPuppeteer extends PuppeteerService {
     // Fill category
     await page.type('#taxonomy-search', category, typeOptions);
     await page.waitForTimeout(randomInt(1000, 6000));
-    // Check manual renew
+    // Select manual renew
     await page.click('#renewalOptionManual');
     await page.waitForTimeout(randomInt(1000, 6000));
+    // Fill description
     await clipboardy.write(this.getDescriptionFromAmazonProduct(product));
     await page.focus('#description-text-area-input');
     await page.keyboard.down('Control');
     await page.keyboard.press('V');
     await page.keyboard.up('Control');
     await page.waitForTimeout(randomInt(1000, 6000));
+    // Fill price
     await page.type('#price_retail-input', price, typeOptions);
     await page.waitForTimeout(randomInt(1000, 6000));
+    // Select ship option
     await page.click('.panel-body.linked-profiles-list input');
     await page.waitForTimeout(randomInt(1000, 6000));
-    // await page.click('button[data-save]');
-    // await page.waitForTimeout(randomInt(3000, 6000));
+    // Save as draft
+    await page.click('button[data-save]');
+    await page.waitForTimeout(randomInt(6000, 9000));
+    await page.close();
   }
 
   private getDescriptionFromAmazonProduct(product: AmazonProduct) {

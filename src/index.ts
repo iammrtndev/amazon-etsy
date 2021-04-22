@@ -23,10 +23,7 @@ async function main() {
   if (isDebug) console.log(urls);
 
   const amazonProducts = await getProducts(urls);
-  if (isDebug) {
-    console.log(amazonProducts);
-    console.log(errors);
-  }
+  if (isDebug) console.log(errors);
 
   for (const product of amazonProducts) {
     await etsyPuppeteer.publishAmazonProduct(product, 'Coloring Books', '9.69');
