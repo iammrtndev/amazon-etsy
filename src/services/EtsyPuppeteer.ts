@@ -46,13 +46,11 @@ export default class EtsyPuppeteer extends PuppeteerService {
       }
     );
     const typeOptions = { delay: randomInt(50, 100) };
-
     // Upload images
     const imageUploadInput = await page.$('#listing-edit-image-upload');
     const imagesPaths = product.images.map((image) => image.latestSavePath);
     await imageUploadInput?.uploadFile(...imagesPaths);
     await page.waitForTimeout(randomInt(3000, 6000));
-
     // Fill title
     await clipboardy.write(product.title);
     await page.focus('#title-input');
@@ -60,7 +58,6 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.keyboard.press('V');
     await page.keyboard.up('Control');
     await page.waitForTimeout(randomInt(1000, 3000));
-
     // Select options
     await page.type('#who_made-input', 'I', typeOptions);
     await page.waitForTimeout(randomInt(1000, 3000));
@@ -68,28 +65,22 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.waitForTimeout(randomInt(1000, 5000));
     await page.type('#when_made-input', '2', typeOptions);
     await page.waitForTimeout(randomInt(1000, 3000));
-
     // Fill category
     await page.type('#taxonomy-search', category, typeOptions);
     await page.waitForTimeout(randomInt(1000, 6000));
-
     // Check manual renew
     await page.click('#renewalOptionManual');
     await page.waitForTimeout(randomInt(1000, 6000));
-
     await clipboardy.write(this.getDescriptionFromAmazonProduct(product));
     await page.focus('#description-text-area-input');
     await page.keyboard.down('Control');
     await page.keyboard.press('V');
     await page.keyboard.up('Control');
     await page.waitForTimeout(randomInt(1000, 6000));
-
     await page.type('#price_retail-input', price, typeOptions);
     await page.waitForTimeout(randomInt(1000, 6000));
-
     await page.click('.panel-body.linked-profiles-list input');
     await page.waitForTimeout(randomInt(1000, 6000));
-
     // await page.click('button[data-save]');
     // await page.waitForTimeout(randomInt(3000, 6000));
   }
@@ -97,8 +88,8 @@ export default class EtsyPuppeteer extends PuppeteerService {
   private getDescriptionFromAmazonProduct(product: AmazonProduct) {
     const formattedDetails = product.details
       .split('\n')
-      .splice(0, 7)
-      .concat('\n');
-    return `${product.description}\n\n${formattedDetails}`;
+      .splice(0, 8)
+      .join('\n');
+    return `${product.description.trim()}\n\n${formattedDetails}`;
   }
 }

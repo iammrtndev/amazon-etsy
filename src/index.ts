@@ -17,28 +17,20 @@ main().catch((error: Error) => {
 });
 
 async function main() {
-  // const urls = await getURLs('../urls.txt');
-  // if (urls.length == 0)
-  //   throw new Error('URLs list contains errors! Please verify your URLs.');
-  // if (isDebug) console.log(urls);
+  const urls = await getURLs('../urls.txt');
+  if (urls.length == 0)
+    throw new Error('URLs list contains errors! Please verify your URLs.');
+  if (isDebug) console.log(urls);
 
-  // const amazonProducts = await getProducts(urls);
-  // if (isDebug) {
-  //   console.log(amazonProducts);
-  //   console.log(errors);
-  // }
-  const testProduct = new AmazonProduct(
-    '',
-    'title',
-    'description',
-    'details',
-    '$8.99'
-  );
-  await etsyPuppeteer.publishAmazonProduct(
-    testProduct,
-    'Coloring Books',
-    '9.69'
-  );
+  const amazonProducts = await getProducts(urls);
+  if (isDebug) {
+    console.log(amazonProducts);
+    console.log(errors);
+  }
+
+  for (const product of amazonProducts) {
+    await etsyPuppeteer.publishAmazonProduct(product, 'Coloring Books', '9.69');
+  }
 }
 
 async function getURLs(txtDir: string) {
@@ -77,5 +69,6 @@ async function getProducts(urls: string[]) {
       errors.push({ url, error });
     }
   }
+  await amazonPuppeteer.closeBrowserAsync();
   return products;
 }

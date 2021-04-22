@@ -10,7 +10,7 @@ export default abstract class PuppeteerService {
     this.browser = await puppeteer.launch(this.launchOptions);
   }
 
-  protected async closeBrowserAsync() {
+  public async closeBrowserAsync() {
     await this.browser?.close();
     this.browser = undefined;
   }

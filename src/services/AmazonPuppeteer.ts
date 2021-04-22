@@ -17,6 +17,7 @@ export default class AmazonPuppeteer extends PuppeteerService {
   }
 
   public async scrapeProduct(url: string) {
+    await this.setupBrowserAsync();
     const page = await this.browser!.newPage();
     try {
       const amazonProduct = await this.getAmazonProduct(url, page);
@@ -57,7 +58,7 @@ export default class AmazonPuppeteer extends PuppeteerService {
   private async getImageURLs(page: Page) {
     let imageURLs: string[] = [];
     await page.click('#main-image-container');
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(10000);
     const sectionButtons = await page.$$('.sitbReader-bookmark');
     if (sectionButtons.length > 0) {
       for (const button of sectionButtons) {
