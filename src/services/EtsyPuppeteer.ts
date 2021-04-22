@@ -45,6 +45,7 @@ export default class EtsyPuppeteer extends PuppeteerService {
         waitUntil: 'networkidle2',
       }
     );
+    const typeOptions = { delay: randomInt(50, 100) };
 
     // Upload images
     const imageUploadInput = await page.$('#listing-edit-image-upload');
@@ -61,42 +62,39 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.keyboard.down('Control');
     await page.keyboard.press('V');
     await page.keyboard.up('Control');
-    await page.waitForTimeout(randomInt(3000, 6000));
+    await page.waitForTimeout(randomInt(1000, 3000));
 
     // Select options
-    await page.type('#who_made-input', 'I did');
-    await page.waitForTimeout(randomInt(3000, 6000));
-    await page.type('#is_supply-input', 'A finished product');
-    await page.waitForTimeout(randomInt(3000, 6000));
-    await page.select('#when_made-input', '2020 - 2021');
-    await page.waitForTimeout(randomInt(3000, 6000));
+    await page.type('#who_made-input', 'I', typeOptions);
+    await page.waitForTimeout(randomInt(1000, 3000));
+    await page.type('#is_supply-input', 'A', typeOptions);
+    await page.waitForTimeout(randomInt(1000, 6000));
+    await page.type('#when_made-input', '2', typeOptions);
+    await page.waitForTimeout(randomInt(1000, 3000));
 
     // Fill category
-    await page.type('#taxonomy-search', category, {
-      delay: randomInt(50, 100),
-    });
-    await page.waitForTimeout(randomInt(3000, 6000));
+    await page.type('#taxonomy-search', category, typeOptions);
+    await page.waitForTimeout(randomInt(1000, 6000));
 
     await page.evaluate(() => {
       document.querySelector('#renewalOptionManual')?.scrollIntoView();
     });
-    await page.waitForTimeout(randomInt(3000, 6000));
-    await page.click('#renewalOptionManual', { clickCount: randomInt(1, 3) });
-    await page.waitForTimeout(randomInt(3000, 6000));
+    await page.click('#renewalOptionManual');
+    await page.waitForTimeout(randomInt(1000, 6000));
 
     await clipboardy.write(this.getDescriptionFromAmazonProduct(product));
     await page.focus('#description-text-area-input');
     await page.keyboard.down('Control');
     await page.keyboard.press('V');
     await page.keyboard.up('Control');
-    await page.waitForTimeout(randomInt(3000, 6000));
+    await page.waitForTimeout(randomInt(1000, 6000));
 
     await page.evaluate(() => {
       document.querySelector('#price_retail-input')?.scrollIntoView();
     });
-    await page.waitForTimeout(randomInt(3000, 6000));
-    await page.keyboard.type(price, { delay: randomInt(50, 100) });
-    await page.waitForTimeout(randomInt(3000, 6000));
+    await page.waitForTimeout(randomInt(1000, 6000));
+    await page.type(price, '#price_retail-input', typeOptions);
+    await page.waitForTimeout(randomInt(1000, 6000));
 
     await page.evaluate(() => {
       document
@@ -104,7 +102,7 @@ export default class EtsyPuppeteer extends PuppeteerService {
         ?.scrollIntoView();
     });
     await page.click('.panel-body.linked-profiles-list input');
-    await page.waitForTimeout(randomInt(3000, 6000));
+    await page.waitForTimeout(randomInt(1000, 6000));
 
     // await page.click('button[data-save]');
     // await page.waitForTimeout(randomInt(3000, 6000));
