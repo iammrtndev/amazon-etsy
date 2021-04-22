@@ -1,13 +1,15 @@
-import { promptInputsAsync } from './utils/promptUtils';
-import AmazonPuppeteer from './services/AmazonPuppeteer';
 import fs from 'fs';
 import path from 'path';
+import AmazonPuppeteer from './services/AmazonPuppeteer';
+import EtsyPuppeteer from './services/EtsyPuppeteer';
 import { AmazonProduct } from './models/AmazonProduct';
+import { promptInputsAsync } from './utils/promptUtils';
 import isURL from './utils/isURL';
 
 const isDebug = true;
 
-const amazonScraper = new AmazonPuppeteer();
+const amazonPuppeteer = new AmazonPuppeteer(!isDebug);
+const etsyPuppeteer = new EtsyPuppeteer(!isDebug);
 const errors: { url: string; error: Error }[] = [];
 
 main().catch((error: Error) => {
@@ -15,17 +17,28 @@ main().catch((error: Error) => {
 });
 
 async function main() {
-  const urls = await getURLs('../urls.txt');
-  if (urls.length == 0)
-    throw new Error('URLs list contains errors! Please verify your URLs.');
-  if (isDebug) console.log(urls);
+  // const urls = await getURLs('../urls.txt');
+  // if (urls.length == 0)
+  //   throw new Error('URLs list contains errors! Please verify your URLs.');
+  // if (isDebug) console.log(urls);
 
-  const products = await getProducts(urls);
-  if (isDebug) {
-    console.log(products);
-    console.log(errors);
-  }
-  await amazonScraper.browser?.close();
+  // const amazonProducts = await getProducts(urls);
+  // if (isDebug) {
+  //   console.log(amazonProducts);
+  //   console.log(errors);
+  // }
+  const testProduct = new AmazonProduct(
+    '',
+    'title',
+    'description',
+    'details',
+    '$8.99'
+  );
+  await etsyPuppeteer.publishAmazonProduct(
+    testProduct,
+    'Coloring Books',
+    '9.69'
+  );
 }
 
 async function getURLs(txtDir: string) {
@@ -52,7 +65,7 @@ async function getProducts(urls: string[]) {
   const products: AmazonProduct[] = [];
   for (const url of urls) {
     try {
-      const product = await amazonScraper.scrapeProduct(url, !isDebug);
+      const product = await amazonPuppeteer.scrapeProduct(url);
       await Promise.all(
         product.images.map((image) => {
           image.resize({ width: 2000 });
