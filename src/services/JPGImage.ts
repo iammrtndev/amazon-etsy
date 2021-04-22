@@ -12,7 +12,7 @@ interface resizeOptions {
 export default class JPGImage {
   name: string;
   sharpOBJ: sharp.Sharp | undefined;
-  latestSavePath: string | undefined;
+  latestSavePath: string = '';
 
   constructor(name: string) {
     this.name = name;

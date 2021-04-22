@@ -1,14 +1,22 @@
 import filenamify from 'filenamify';
-import { Browser, Page } from 'puppeteer';
-import puppeteer from 'puppeteer-extra';
+import { Browser, LaunchOptions, Page } from 'puppeteer';
 import { AmazonProduct } from '../models/AmazonProduct';
 import JPGImage from './JPGImage';
+import PuppeteerService from '../models/PuppeteerService';
 
-export default class AmazonPuppeteer {
-  browser: Browser | undefined;
+export default class AmazonPuppeteer extends PuppeteerService {
+  protected browser: Browser | undefined;
+  protected launchOptions: LaunchOptions;
 
-  public async scrapeProduct(url: string, headless: boolean) {
-    await this.setupBrowserAsync(headless);
+  constructor(headless: boolean) {
+    super();
+    this.launchOptions = {
+      headless,
+      args: ['--disable-web-security'],
+    };
+  }
+
+  public async scrapeProduct(url: string) {
     const page = await this.browser!.newPage();
     try {
       const amazonProduct = await this.getAmazonProduct(url, page);
@@ -23,13 +31,6 @@ export default class AmazonPuppeteer {
     } finally {
       await page.close();
     }
-  }
-  private async setupBrowserAsync(headless: boolean) {
-    if (this.browser != null) return;
-    this.browser = await puppeteer.launch({
-      headless,
-      args: ['--disable-web-security'],
-    });
   }
 
   private async getAmazonProduct(url: string, page: Page) {
