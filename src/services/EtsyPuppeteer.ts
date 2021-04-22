@@ -54,9 +54,6 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.waitForTimeout(randomInt(3000, 6000));
 
     // Fill title
-    await page.evaluate(() => {
-      document.querySelector('#title-input')?.scrollIntoView();
-    });
     await clipboardy.write(product.title);
     await page.focus('#title-input');
     await page.keyboard.down('Control');
@@ -68,7 +65,7 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.type('#who_made-input', 'I', typeOptions);
     await page.waitForTimeout(randomInt(1000, 3000));
     await page.type('#is_supply-input', 'A', typeOptions);
-    await page.waitForTimeout(randomInt(1000, 6000));
+    await page.waitForTimeout(randomInt(1000, 5000));
     await page.type('#when_made-input', '2', typeOptions);
     await page.waitForTimeout(randomInt(1000, 3000));
 
@@ -76,9 +73,7 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.type('#taxonomy-search', category, typeOptions);
     await page.waitForTimeout(randomInt(1000, 6000));
 
-    await page.evaluate(() => {
-      document.querySelector('#renewalOptionManual')?.scrollIntoView();
-    });
+    // Check manual renew
     await page.click('#renewalOptionManual');
     await page.waitForTimeout(randomInt(1000, 6000));
 
@@ -89,18 +84,9 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.keyboard.up('Control');
     await page.waitForTimeout(randomInt(1000, 6000));
 
-    await page.evaluate(() => {
-      document.querySelector('#price_retail-input')?.scrollIntoView();
-    });
-    await page.waitForTimeout(randomInt(1000, 6000));
-    await page.type(price, '#price_retail-input', typeOptions);
+    await page.type('#price_retail-input', price, typeOptions);
     await page.waitForTimeout(randomInt(1000, 6000));
 
-    await page.evaluate(() => {
-      document
-        .querySelector('.panel-body.linked-profiles-list input')
-        ?.scrollIntoView();
-    });
     await page.click('.panel-body.linked-profiles-list input');
     await page.waitForTimeout(randomInt(1000, 6000));
 
