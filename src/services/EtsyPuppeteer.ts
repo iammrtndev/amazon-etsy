@@ -11,6 +11,8 @@ import { homedir } from 'os';
 export default class EtsyPuppeteer extends PuppeteerService {
   protected browser: Browser | undefined;
   protected launchOptions: LaunchOptions;
+  private width: number = 1280;
+  private height: number = 720;
 
   constructor(headless: boolean) {
     super();
@@ -21,14 +23,11 @@ export default class EtsyPuppeteer extends PuppeteerService {
         /\\/g,
         '/'
       )}/AppData/Local/Google/Chrome/User Data`,
-      ignoreHTTPSErrors: true,
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-sync',
-        '--ignore-certificate-errors',
         '--lang=en-US,en;q=0.9',
+        `--window-size=${this.width},${this.height}`,
       ],
+      ignoreHTTPSErrors: true,
       defaultViewport: null,
     };
   }
@@ -39,10 +38,7 @@ export default class EtsyPuppeteer extends PuppeteerService {
     price: string
   ) {
     await this.setupBrowserAsync();
-    const width = 1280;
-    const height = 720;
     const page = await this.browser!.newPage();
-    await page.setViewport({ width, height });
     await page.goto(
       'https://www.etsy.com/your/listings/create?ref=listings_manager_prototype&from_page=/your/listings',
       {
@@ -53,10 +49,10 @@ export default class EtsyPuppeteer extends PuppeteerService {
     const fakeHumanAsync = async () => {
       await page.waitForTimeout(randomInt(3000, 6000));
       await page.mouse.move(
-        randomInt(width / 2) + 300,
-        randomInt(height / 3) + height / 3
+        randomInt(this.width / 2) + 300,
+        randomInt(this.height / 3) + this.height / 3
       );
-      page.mouse.wheel({ deltaY: randomInt(-3, 3) });
+      page.mouse.wheel({ deltaY: randomInt(-1, 1) });
     };
 
     // Upload images
@@ -78,11 +74,11 @@ export default class EtsyPuppeteer extends PuppeteerService {
 
     // Select options
     await page.select('#who_made-input', 'I did');
-    fakeHumanAsync();
+    await fakeHumanAsync();
     await page.select('#is_supply-input', 'A finished product');
-    fakeHumanAsync();
+    await fakeHumanAsync();
     await page.select('#when_made-input', '2020 - 2021');
-    fakeHumanAsync();
+    await fakeHumanAsync();
 
     // Fill category
     await page.type('#taxonomy-search', category, {
@@ -93,7 +89,7 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.evaluate(() => {
       document.querySelector('#renewalOptionManual')?.scrollIntoView();
     });
-    fakeHumanAsync();
+    await fakeHumanAsync();
     await page.click('#renewalOptionManual', { clickCount: randomInt(1, 3) });
     await fakeHumanAsync();
 
@@ -107,8 +103,8 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.evaluate(() => {
       document.querySelector('#price_retail-input')?.scrollIntoView();
     });
-    fakeHumanAsync();
-    await page.keyboard.type(price, { delay: randomInt(100, 600) });
+    await fakeHumanAsync();
+    await page.keyboard.type(price, { delay: randomInt(50, 100) });
     await fakeHumanAsync();
 
     await page.evaluate(() => {
