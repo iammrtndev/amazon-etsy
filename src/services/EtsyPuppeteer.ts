@@ -5,7 +5,7 @@ puppeteer.use(puppeteerStealth());
 import { Browser, LaunchOptions } from 'puppeteer';
 import PuppeteerService from '../models/PuppeteerService';
 import { AmazonProduct } from '../models/AmazonProduct';
-import { randomInt } from 'node:crypto';
+import { randomInt } from 'crypto';
 
 export default class EtsyPuppeteer extends PuppeteerService {
   protected browser: Browser | undefined;
