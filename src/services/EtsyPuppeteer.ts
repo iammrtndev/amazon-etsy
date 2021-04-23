@@ -7,6 +7,14 @@ import PuppeteerService from '../models/PuppeteerService';
 import { AmazonProduct } from '../models/AmazonProduct';
 import { randomInt } from 'crypto';
 import { homedir } from 'os';
+import path from 'path';
+import fse from 'fs-extra';
+
+const userDataDir = `${homedir().replace(
+  /\\/g,
+  '/'
+)}/AppData/Local/Google/Chrome/User Data`;
+const userDataDirLocal = path.resolve('./User Data');
 
 export default class EtsyPuppeteer extends PuppeteerService {
   protected browser: Browser | undefined;
@@ -19,10 +27,7 @@ export default class EtsyPuppeteer extends PuppeteerService {
     this.launchOptions = {
       headless,
       executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
-      userDataDir: `${homedir().replace(
-        /\\/g,
-        '/'
-      )}/AppData/Local/Google/Chrome/User Data`,
+      userDataDir: userDataDirLocal,
       args: [
         '--lang=en-US,en;q=0.9',
         `--window-size=${this.width},${this.height}`,
@@ -30,6 +35,12 @@ export default class EtsyPuppeteer extends PuppeteerService {
       ignoreHTTPSErrors: true,
       defaultViewport: null,
     };
+  }
+
+  protected async setupBrowserAsync() {
+    if (this.browser != null) return;
+    fse.copySync(userDataDir, userDataDirLocal, { overwrite: true });
+    this.browser = await puppeteer.launch(this.launchOptions);
   }
 
   public async publishAmazonProduct(
