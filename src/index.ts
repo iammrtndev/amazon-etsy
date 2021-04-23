@@ -3,7 +3,6 @@ import path from 'path';
 import AmazonPuppeteer from './services/AmazonPuppeteer';
 import EtsyPuppeteer from './services/EtsyPuppeteer';
 import { AmazonProduct } from './models/AmazonProduct';
-import { promptInputsAsync } from './utils/promptUtils';
 import isURL from './utils/isURL';
 
 const isDebug = true;
@@ -17,42 +16,43 @@ main().catch((error: Error) => {
 });
 
 async function main() {
-  const urls = await getURLs('../urls.txt');
-  if (urls.length == 0)
+  const URLWithPriceCollection = await getURLWithPriceCollection('../urls.txt');
+  if (URLWithPriceCollection == null || URLWithPriceCollection.length == 0)
     throw new Error('URLs list contains errors! Please verify your URLs.');
-  if (isDebug) console.log(urls);
+  if (isDebug) console.log(URLWithPriceCollection);
 
-  const amazonProducts = await getProducts(urls);
+  const productWithPriceCollection = await getProductWithPriceCollection(
+    URLWithPriceCollection
+  );
   if (isDebug) console.log(errors);
+  console.log(productWithPriceCollection);
 
-  for (const product of amazonProducts) {
-    await etsyPuppeteer.publishAmazonProduct(product, 'Coloring Books', '9.69');
+  for (const { product, price } of productWithPriceCollection) {
+    await etsyPuppeteer.publishAmazonProduct(product, 'Coloring Books', price);
   }
 }
 
-async function getURLs(txtDir: string) {
-  let urls: string[] = [];
-  const formatURLs = () => {
-    urls = urls.map((url) => url.trim());
-    urls = urls.filter((url) => isURL(url));
-  };
-
+async function getURLWithPriceCollection(txtDir: string) {
   const absolutePath = path.resolve(txtDir);
-  if (fs.existsSync(absolutePath)) {
-    urls = fs.readFileSync(absolutePath, { encoding: 'utf8' }).split('\n');
-  }
-  formatURLs();
-  // If {txtDir} file is empty
-  if (urls.length == 0) {
-    urls = await promptInputsAsync('Amazon product url: ');
-  }
-  formatURLs();
-  return [...new Set(urls)];
+  if (fs.existsSync(absolutePath) == false) return;
+
+  const lines = fs.readFileSync(absolutePath, { encoding: 'utf8' }).split('\n');
+  let URLWithPriceCollection: URLWithPrice[] = lines.map((line) => {
+    const split = line.split(' ');
+    return { url: split[1].trim(), price: split[0] };
+  });
+  URLWithPriceCollection = URLWithPriceCollection.filter(
+    (obj) => isNaN(+obj.price) == false && isURL(obj.url)
+  );
+  return [...new Set(URLWithPriceCollection)];
 }
 
-async function getProducts(urls: string[]) {
-  const products: AmazonProduct[] = [];
-  for (const url of urls) {
+async function getProductWithPriceCollection(
+  URLWithPriceCollection: URLWithPrice[]
+) {
+  const productWithPriceCollection: ProductWithPrice[] = [];
+  for (let i = 0; i < URLWithPriceCollection.length; i++) {
+    const { url, price } = URLWithPriceCollection[i];
     try {
       const product = await amazonPuppeteer.scrapeProduct(url);
       await Promise.all(
@@ -61,11 +61,21 @@ async function getProducts(urls: string[]) {
           return image.saveAsync('../tmp');
         })
       );
-      products.push(product);
+      productWithPriceCollection.push({ price, product });
     } catch (error) {
       errors.push({ url, error });
     }
   }
   await amazonPuppeteer.closeBrowserAsync();
-  return products;
+  return productWithPriceCollection;
+}
+
+interface URLWithPrice {
+  url: string;
+  price: string;
+}
+
+interface ProductWithPrice {
+  product: AmazonProduct;
+  price: string;
 }
