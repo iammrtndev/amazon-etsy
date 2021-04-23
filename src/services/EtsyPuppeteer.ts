@@ -1,4 +1,5 @@
 import clipboardy from 'clipboardy';
+// @ts-ignore
 import fse from 'fs-extra';
 import path from 'path';
 import puppeteer from 'puppeteer-extra';
@@ -39,7 +40,7 @@ export default class EtsyPuppeteer extends PuppeteerService {
 
   protected async setupBrowserAsync() {
     if (this.browser != null) return;
-    fse.copySync(userDataDir, userDataDirLocal, { overwrite: true });
+    fse.copySync(userDataDir, userDataDirLocal, { overwrite: false });
     this.browser = await puppeteer.launch(this.launchOptions);
   }
 
@@ -84,15 +85,16 @@ export default class EtsyPuppeteer extends PuppeteerService {
     // Fill category
     await page.type('#taxonomy-search', category, typeOptions);
     await fakeHumanAsync();
-    // Select manual renew
-    await page.click('#renewalOptionManual');
-    await fakeHumanAsync();
     // Fill description
     await clipboardy.write(this.getDescriptionFromAmazonProduct(product));
     await page.focus('#description-text-area-input');
     await page.keyboard.down('Control');
     await page.keyboard.press('V');
     await page.keyboard.up('Control');
+    await page.keyboard.press('Enter');
+    await fakeHumanAsync();
+    // Select manual renew
+    await page.click('#renewalOptionManual');
     await fakeHumanAsync();
     // Fill price
     await page.type('#price_retail-input', price, typeOptions);
