@@ -9,7 +9,7 @@ const isDebug = true;
 
 const amazonPuppeteer = new AmazonPuppeteer(!isDebug);
 const etsyPuppeteer = new EtsyPuppeteer(!isDebug);
-const errors: { url: string; error: Error }[] = [];
+const productWithPriceErrors: { url: string; error: Error }[] = [];
 
 main().catch((error: Error) => {
   console.log(error.message);
@@ -24,8 +24,8 @@ async function main() {
   const productWithPriceCollection = await getProductWithPriceCollection(
     URLWithPriceCollection
   );
-  if (isDebug) console.log(errors);
-  console.log(productWithPriceCollection);
+  if (isDebug) console.log(productWithPriceCollection);
+  if (productWithPriceErrors) console.log(productWithPriceErrors);
 
   for (const { product, price } of productWithPriceCollection) {
     await etsyPuppeteer.publishAmazonProduct(product, 'Coloring Books', price);
@@ -67,7 +67,7 @@ async function getProductWithPriceCollection(
       );
       productWithPriceCollection.push({ price, product });
     } catch (error) {
-      errors.push({ url, error });
+      productWithPriceErrors.push({ url, error });
     }
   }
   await amazonPuppeteer.closeBrowserAsync();
