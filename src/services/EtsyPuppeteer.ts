@@ -40,6 +40,7 @@ export default class EtsyPuppeteer extends PuppeteerService {
 
   protected async setupBrowserAsync() {
     if (this.browser != null) return;
+    console.log('Copying "User Data" folder...');
     fse.copySync(userDataDir, userDataDirLocal, { overwrite: true });
     this.browser = await puppeteer.launch(this.launchOptions);
   }
@@ -58,15 +59,15 @@ export default class EtsyPuppeteer extends PuppeteerService {
       }
     );
     const typeOptions = { delay: randomInt(90, 120) };
-    const fakeHumanAsync = async () => {
-      await page.waitForTimeout(randomInt(3000, 12000));
+    const waitAroundAsync = async (min: number, max: number) => {
+      await page.waitForTimeout(randomInt(min, max));
     };
 
     // Upload images
     const imageUploadInput = await page.$('#listing-edit-image-upload');
     const imagesPaths = product.images.map((image) => image.latestSavePath);
     await imageUploadInput?.uploadFile(...imagesPaths);
-    await fakeHumanAsync();
+    await waitAroundAsync(3000, 12000);
 
     // Fill title
     await clipboardy.write(product.title);
@@ -74,38 +75,41 @@ export default class EtsyPuppeteer extends PuppeteerService {
     await page.keyboard.down('Control');
     await page.keyboard.press('V');
     await page.keyboard.up('Control');
-    await fakeHumanAsync();
+    await waitAroundAsync(3000, 9000);
     // Select infos
     await page.type('#who_made-input', 'I', typeOptions);
-    await fakeHumanAsync();
+    await waitAroundAsync(2000, 4000);
     await page.type('#is_supply-input', 'A', typeOptions);
-    await fakeHumanAsync();
+    await waitAroundAsync(2000, 4000);
     await page.type('#when_made-input', '2', typeOptions);
-    await fakeHumanAsync();
+    await waitAroundAsync(2000, 4000);
     // Fill category
     await page.type('#taxonomy-search', category, typeOptions);
-    await fakeHumanAsync();
+    await waitAroundAsync(3000, 6000);
     await page.keyboard.press('Enter');
-    await fakeHumanAsync();
+    await waitAroundAsync(2000, 4000);
     // Fill description
     await clipboardy.write(this.getDescriptionFromAmazonProduct(product));
     await page.focus('#description-text-area-input');
+    await waitAroundAsync(3000, 6000);
     await page.keyboard.down('Control');
     await page.keyboard.press('V');
     await page.keyboard.up('Control');
-    await fakeHumanAsync();
+    await waitAroundAsync(2000, 4000);
     // Select manual renew
     await page.click('#renewalOptionManual');
-    await fakeHumanAsync();
+    await waitAroundAsync(3000, 6000);
     // Fill price
+    await page.focus('#description-text-area-input');
+    await waitAroundAsync(2000, 4000);
     await page.type('#price_retail-input', price, typeOptions);
-    await fakeHumanAsync();
+    await waitAroundAsync(3000, 6000);
     // Select ship option
     await page.click('.panel-body.linked-profiles-list input');
-    await fakeHumanAsync();
+    await waitAroundAsync(3000, 6000);
     // Save as draft
     await page.click('button[data-save]');
-    await fakeHumanAsync();
+    await waitAroundAsync(3000, 6000);
 
     await page.close();
   }

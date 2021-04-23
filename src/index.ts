@@ -30,6 +30,8 @@ async function main() {
   for (const { product, price } of productWithPriceCollection) {
     await etsyPuppeteer.publishAmazonProduct(product, 'Coloring Books', price);
   }
+  await etsyPuppeteer.closeBrowserAsync();
+  process.exit(0);
 }
 
 async function getURLWithPriceCollection(txtDir: string) {
