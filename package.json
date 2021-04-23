@@ -7,7 +7,6 @@
   "dependencies": {
     "axios": "^0.21.1",
     "clipboardy": "^2.3.0",
-    "crypto": "^1.0.1",
     "filenamify": "^4.2.0",
     "fs-extra": "^9.1.0",
     "puppeteer": "^5.0.0",
