@@ -1,14 +1,14 @@
 import clipboardy from 'clipboardy';
-import puppeteer from 'puppeteer-extra';
-import puppeteerStealth from 'puppeteer-extra-plugin-stealth';
-puppeteer.use(puppeteerStealth());
-import { Browser, LaunchOptions } from 'puppeteer';
-import PuppeteerService from '../models/PuppeteerService';
-import { AmazonProduct } from '../models/AmazonProduct';
-import { randomInt } from 'crypto';
-import { homedir } from 'os';
-import path from 'path';
 import fse from 'fs-extra';
+import path from 'path';
+import puppeteer from 'puppeteer-extra';
+import PuppeteerService from '../models/PuppeteerService';
+import puppeteerStealth from 'puppeteer-extra-plugin-stealth';
+import { AmazonProduct } from '../models/AmazonProduct';
+import { Browser, LaunchOptions } from 'puppeteer';
+import { homedir } from 'os';
+import { randomInt } from 'crypto';
+puppeteer.use(puppeteerStealth());
 
 const userDataDir = `${homedir().replace(
   /\\/g,
