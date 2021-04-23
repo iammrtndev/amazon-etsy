@@ -37,6 +37,8 @@ async function getURLWithPriceCollection(txtDir: string) {
   if (fs.existsSync(absolutePath) == false) return;
 
   const lines = fs.readFileSync(absolutePath, { encoding: 'utf8' }).split('\n');
+  if (lines.length == 0) return;
+
   let URLWithPriceCollection: URLWithPrice[] = lines.map((line) => {
     const split = line.split(' ');
     return { url: split[1].trim(), price: split[0] };
