@@ -47,7 +47,7 @@ async function setupBrowserAsync() {
   const draft = console.draft(
     chalkUtils.info(`\n\nCopying ${chalkUtils.dir('User Data')} folder...`)
   );
-  draft('');
+  draft('\0');
   fse.copySync(userDataDir, userDataDirLocal, { overwrite: true });
   browser = await puppeteer.launch({
     headless: false,
