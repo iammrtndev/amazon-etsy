@@ -9,7 +9,7 @@ import isURL from './utils/isURL';
 import path from 'path';
 import ScrapingTask, { statusEnum } from './services/ScrapingTask';
 import { BookProduct } from './models/BookProduct';
-// import { dectectRunningAsync } from './utils/processUtils';
+import { dectectRunningAsync } from './utils/processUtils';
 dotenv.config();
 
 declare global {
@@ -29,12 +29,12 @@ if (process.env.NODE_ENV != 'dev') {
   });
 }
 
-// if (dectectRunningAsync('chrome.exe'))
-//   errorExit('Chrome is open. Please close it and try again');
-
 main();
 
 async function main() {
+  if (await dectectRunningAsync('chrome.exe'))
+    errorExit('Chrome is open. Please close it and try again');
+
   const scrapingTasks = getScrapingTasks('../urls.txt');
   const scrapingTasksMap: { [url: string]: ScrapingTask } = {};
   for (const scrapingTask of scrapingTasks) {
@@ -57,6 +57,7 @@ async function main() {
       scrapingTasksMap[url].update(product.title, statusEnum.downloaded);
     } catch (error) {
       scrapingTasksMap[url].update(url, statusEnum.failed);
+      throw error;
     }
   }
   await Promise.all(imagePromises);
@@ -74,6 +75,7 @@ async function main() {
       scrapingTask.update(bookProduct.title, statusEnum.succeded);
     } catch (error) {
       scrapingTask.update(bookProduct.title, statusEnum.failed);
+      throw error;
     }
   }
   await etsyPuppeteer.browser?.close();
