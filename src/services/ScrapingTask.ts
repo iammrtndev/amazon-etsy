@@ -8,9 +8,6 @@ export default class ScrapingTask {
   public get status(): statusEnum {
     return this._status;
   }
-  private set status(value: statusEnum) {
-    this._status = value;
-  }
 
   public readonly price: string;
   public readonly url: string;
@@ -32,7 +29,7 @@ export default class ScrapingTask {
 
   public update(name: string, status: statusEnum) {
     if (this.dashboard == null || this.draft == null) return;
-    this.status = status;
+    this._status = status;
     const displayingName = chalkUtils.dir(
       name.length > 100
         ? `${name.slice(0, Math.min(name.length, 100))}...`
