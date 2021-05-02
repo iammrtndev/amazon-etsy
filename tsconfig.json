@@ -20,7 +20,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": false,
     "noEmitHelpers": true,
-    "importHelpers": true,
     "pretty": true,
     "stripInternal": true,
     "resolveJsonModule": true
