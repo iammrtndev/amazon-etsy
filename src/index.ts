@@ -9,6 +9,7 @@ import isURL from './utils/isURL';
 import path from 'path';
 import ScrapingTask, { statusEnum } from './services/ScrapingTask';
 import { BookProduct } from './models/BookProduct';
+import { dectectRunningAsync } from './utils/processUtils';
 dotenv.config();
 
 declare global {
@@ -27,6 +28,9 @@ if (process.env.NODE_ENV != 'dev') {
     tracesSampleRate: 1.0,
   });
 }
+
+if (dectectRunningAsync('chrome.exe'))
+  errorExit('Chrome is open. Please close it and try again');
 
 main();
 
@@ -77,7 +81,7 @@ async function main() {
 }
 
 function errorExit(message: string) {
-  console.log(chalkUtils.error(message));
+  console.log(chalkUtils.error(` ${message} `));
   process.exit();
 }
 
