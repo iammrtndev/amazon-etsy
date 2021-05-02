@@ -9,7 +9,7 @@ import isURL from './utils/isURL';
 import path from 'path';
 import ScrapingTask, { statusEnum } from './services/ScrapingTask';
 import { BookProduct } from './models/BookProduct';
-import { dectectRunningAsync } from './utils/processUtils';
+// import { dectectRunningAsync } from './utils/processUtils';
 dotenv.config();
 
 declare global {
@@ -29,8 +29,8 @@ if (process.env.NODE_ENV != 'dev') {
   });
 }
 
-if (dectectRunningAsync('chrome.exe'))
-  errorExit('Chrome is open. Please close it and try again');
+// if (dectectRunningAsync('chrome.exe'))
+//   errorExit('Chrome is open. Please close it and try again');
 
 main();
 
