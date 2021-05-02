@@ -12,29 +12,31 @@ interface resizeOptions {
 export default class JPGImage {
   name: string;
   sharpOBJ: sharp.Sharp | undefined;
-  latestSavePath: string = '';
+  latestSavePath: string | undefined;
 
   constructor(name: string) {
     this.name = name;
   }
 
-  async loadAsync(url: string) {
+  public async downloadAsync(url: string) {
     const response = await axios.get(url, {
       responseType: 'arraybuffer',
     });
     this.sharpOBJ = sharp(response.data as Buffer);
+    return this;
   }
 
-  resize(options: resizeOptions) {
-    this.sharpOBJ?.resize({
-      fit: 'contain',
-      ...options,
-    });
+  public resize(options: resizeOptions) {
+    if (this.sharpOBJ)
+      this.sharpOBJ.resize({
+        fit: 'contain',
+        ...options,
+      });
   }
 
-  async saveAsync(relativePath: string) {
-    if (!fs.existsSync(relativePath)) fs.mkdirSync(relativePath);
-    const output = path.resolve(relativePath, `${this.name}.jpg`);
+  public async saveAsync(savePath: string) {
+    if (fs.existsSync(savePath) == false) fs.mkdirSync(savePath);
+    const output = path.resolve(savePath, `${this.name}.jpg`);
     const buffer = await this.sharpOBJ?.jpeg({ mozjpeg: true }).toBuffer()!;
     return new Promise<void>((resolve) => {
       fs.writeFile(output, buffer, (error) => {

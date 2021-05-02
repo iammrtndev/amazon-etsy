@@ -1,124 +1,131 @@
+import * as chalkUtils from '../utils/chalkUtils';
 import clipboardy from 'clipboardy';
-// @ts-ignore
 import fse from 'fs-extra';
 import path from 'path';
 import puppeteer from 'puppeteer-extra';
-import PuppeteerService from '../models/PuppeteerService';
 import puppeteerStealth from 'puppeteer-extra-plugin-stealth';
-import { AmazonProduct } from '../models/AmazonProduct';
-import { Browser, LaunchOptions } from 'puppeteer';
+import { BookProduct } from '../models/BookProduct';
+import { Browser, Page } from 'puppeteer';
 import { homedir } from 'os';
 import { randomInt } from 'crypto';
 puppeteer.use(puppeteerStealth());
 
-const userDataDir = `${homedir().replace(
-  /\\/g,
-  '/'
-)}/AppData/Local/Google/Chrome/User Data`;
-const userDataDirLocal = path.resolve('./User Data');
+export let browser: Browser | undefined;
 
-export default class EtsyPuppeteer extends PuppeteerService {
-  protected browser: Browser | undefined;
-  protected launchOptions: LaunchOptions;
-  private width: number = 1280;
-  private height: number = 720;
+export async function publishBookProduct(
+  bookProduct: BookProduct,
+  category: string,
+  price: string
+) {
+  await setupBrowserAsync();
+  const page = await browser!.newPage();
+  await page.goto(
+    'https://www.etsy.com/your/listings/create?ref=listings_manager_prototype&from_page=/your/listings',
+    {
+      waitUntil: 'networkidle2',
+    }
+  );
 
-  constructor(headless: boolean) {
-    super();
-    this.launchOptions = {
-      headless,
-      executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
-      userDataDir: userDataDirLocal,
-      args: [
-        '--lang=en-US,en;q=0.9',
-        `--window-size=${this.width},${this.height}`,
-      ],
-      ignoreHTTPSErrors: true,
-      defaultViewport: null,
-    };
-  }
+  await uploadImages(page, bookProduct);
+  await fillTitle(bookProduct, page);
+  await selectDetailsOptions(page);
+  await fillCategory(page, category);
+  await fillDescription(bookProduct, page);
+  await selectManualRenew(page);
+  await fillPrice(page, price);
+  await selectShipOptions(page);
+  await clickSave(page);
+  await page.close();
+}
 
-  protected async setupBrowserAsync() {
-    if (this.browser != null) return;
-    console.log('Copying "User Data" folder...');
-    fse.copySync(userDataDir, userDataDirLocal, { overwrite: true });
-    this.browser = await puppeteer.launch(this.launchOptions);
-  }
+async function setupBrowserAsync() {
+  const userDataDir = `${homedir().replace(
+    /\\/g,
+    '/'
+  )}/AppData/Local/Google/Chrome/User Data`;
+  const userDataDirLocal = path.resolve('./User Data');
+  const draft = console.draft(
+    chalkUtils.info(`\n\nCopying ${chalkUtils.dir('User Data')} folder...`)
+  );
+  draft('');
+  fse.copySync(userDataDir, userDataDirLocal, { overwrite: true });
+  browser = await puppeteer.launch({
+    headless: false,
+    executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    userDataDir: userDataDirLocal,
+    args: ['--lang=en-US,en;q=0.9', `--window-size=1280,720`],
+    ignoreHTTPSErrors: true,
+    defaultViewport: null,
+  });
+}
 
-  public async publishAmazonProduct(
-    product: AmazonProduct,
-    category: string,
-    price: string
-  ) {
-    await this.setupBrowserAsync();
-    const page = await this.browser!.newPage();
-    await page.goto(
-      'https://www.etsy.com/your/listings/create?ref=listings_manager_prototype&from_page=/your/listings',
-      {
-        waitUntil: 'networkidle2',
-      }
-    );
-    const typeOptions = { delay: randomInt(90, 120) };
-    const waitAroundAsync = async (min: number, max: number) => {
-      await page.waitForTimeout(randomInt(min, max));
-    };
+async function waitAroundAsync(page: Page, min: number, max: number) {
+  await page.waitForTimeout(randomInt(min, max));
+}
 
-    // Upload images
-    const imageUploadInput = await page.$('#listing-edit-image-upload');
-    const imagesPaths = product.images.map((image) => image.latestSavePath);
-    await imageUploadInput?.uploadFile(...imagesPaths);
-    await waitAroundAsync(3000, 12000);
+async function pasteAsync(page: Page, str: string) {
+  await clipboardy.write(str);
+  await page.keyboard.down('Control');
+  await page.keyboard.press('V');
+  await page.keyboard.up('Control');
+}
 
-    // Fill title
-    await clipboardy.write(product.title);
-    await page.focus('#title-input');
-    await page.keyboard.down('Control');
-    await page.keyboard.press('V');
-    await page.keyboard.up('Control');
-    await waitAroundAsync(3000, 9000);
-    // Select infos
-    await page.type('#who_made-input', 'I', typeOptions);
-    await waitAroundAsync(2000, 4000);
-    await page.type('#is_supply-input', 'A', typeOptions);
-    await waitAroundAsync(2000, 4000);
-    await page.type('#when_made-input', '2', typeOptions);
-    await waitAroundAsync(2000, 4000);
-    // Fill category
-    await page.type('#taxonomy-search', category, typeOptions);
-    await waitAroundAsync(3000, 6000);
-    await page.keyboard.press('Enter');
-    await waitAroundAsync(2000, 4000);
-    // Fill description
-    await clipboardy.write(this.getDescriptionFromAmazonProduct(product));
-    await page.focus('#description-text-area-input');
-    await waitAroundAsync(3000, 6000);
-    await page.keyboard.down('Control');
-    await page.keyboard.press('V');
-    await page.keyboard.up('Control');
-    await waitAroundAsync(2000, 4000);
-    // Select manual renew
-    await page.click('#renewalOptionManual');
-    await waitAroundAsync(3000, 6000);
-    // Fill price
-    await page.focus('#description-text-area-input');
-    await waitAroundAsync(2000, 4000);
-    await page.type('#price_retail-input', price, typeOptions);
-    await waitAroundAsync(3000, 6000);
-    // Select ship option
-    await page.click('.panel-body.linked-profiles-list input');
-    await waitAroundAsync(3000, 6000);
-    // Save as draft
-    await page.click('button[data-save]');
-    await waitAroundAsync(3000, 6000);
+async function uploadImages(page: Page, bookProduct: BookProduct) {
+  const imagesPaths = bookProduct.images.map(
+    (image) => image.latestSavePath || ''
+  );
+  const imageUploadInput = await page.$('#listing-edit-image-upload');
+  await imageUploadInput!.uploadFile(...imagesPaths);
+  await waitAroundAsync(page, 3000, 12000);
+}
 
-    await page.close();
-  }
+async function fillTitle(bookProduct: BookProduct, page: Page) {
+  await page.focus('#title-input');
+  await pasteAsync(page, bookProduct.title);
+  await waitAroundAsync(page, 3000, 9000);
+}
 
-  private getDescriptionFromAmazonProduct(product: AmazonProduct) {
-    const formattedDetails = product.details
-      .split('\n')
-      .splice(0, 8)
-      .join('\n');
-    return `${product.description.trim()}\n\n${formattedDetails}`;
-  }
+async function selectDetailsOptions(page: Page) {
+  await page.type('#who_made-input', 'I');
+  await waitAroundAsync(page, 2000, 4000);
+  await page.type('#is_supply-input', 'A');
+  await waitAroundAsync(page, 3000, 4000);
+  await page.type('#when_made-input', '2');
+  await waitAroundAsync(page, 2000, 3000);
+}
+
+async function fillCategory(page: Page, category: string) {
+  await page.type('#taxonomy-search', category, { delay: randomInt(100, 150) });
+  await waitAroundAsync(page, 3000, 6000);
+  await page.keyboard.press('Enter');
+  await waitAroundAsync(page, 2000, 4000);
+}
+
+async function fillDescription(bookProduct: BookProduct, page: Page) {
+  await page.focus('#description-text-area-input');
+  await waitAroundAsync(page, 3000, 6000);
+  await pasteAsync(page, bookProduct.description);
+  await waitAroundAsync(page, 2000, 4000);
+}
+
+async function selectManualRenew(page: Page) {
+  await page.click('#renewalOptionManual');
+  await waitAroundAsync(page, 3000, 6000);
+}
+
+async function fillPrice(page: Page, price: string) {
+  await page.focus('#description-text-area-input');
+  await waitAroundAsync(page, 2000, 4000);
+  await page.type('#price_retail-input', price, { delay: 100 });
+  await waitAroundAsync(page, 3000, 6000);
+}
+
+async function selectShipOptions(page: Page) {
+  await page.click('.panel-body.linked-profiles-list input');
+  await waitAroundAsync(page, 3000, 6000);
+}
+
+async function clickSave(page: Page) {
+  await page.click('button[data-save]');
+  await waitAroundAsync(page, 3000, 6000);
 }

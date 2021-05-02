@@ -1,85 +1,109 @@
+import * as amazonPuppeteer from './services/amazonPuppeteer';
+import * as chalkUtils from './utils/chalkUtils';
+import * as etsyPuppeteer from './services/etsyPuppeteer';
+import * as scrapingDashboard from './services/scrapingDashboard';
+import * as sentry from '@sentry/node';
+import dotenv from 'dotenv';
 import fs from 'fs';
-import path from 'path';
-import AmazonPuppeteer from './services/AmazonPuppeteer';
-import EtsyPuppeteer from './services/EtsyPuppeteer';
-import { AmazonProduct } from './models/AmazonProduct';
 import isURL from './utils/isURL';
+import path from 'path';
+import ScrapingTask, { statusEnum } from './services/ScrapingTask';
+import { BookProduct } from './models/BookProduct';
+dotenv.config();
 
-const isDebug = true;
+declare global {
+  namespace NodeJS {
+    interface Global {
+      __rootdir__: string;
+    }
+  }
+}
 
-const amazonPuppeteer = new AmazonPuppeteer(!isDebug);
-const etsyPuppeteer = new EtsyPuppeteer(!isDebug);
-const productWithPriceErrors: { url: string; error: Error }[] = [];
+if (process.env.NODE_ENV != 'dev') {
+  global.__rootdir__ = __dirname || process.cwd();
+  if (process.env.SENTRY_DSN == null) errorExit('SENTRY_DSN is null');
+  sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    tracesSampleRate: 1.0,
+  });
+}
 
-main().catch((error: Error) => {
-  console.log(error.message);
-});
+main();
 
 async function main() {
-  const URLWithPriceCollection = await getURLWithPriceCollection('../urls.txt');
-  if (URLWithPriceCollection == null || URLWithPriceCollection.length == 0)
-    throw new Error('URLs list contains errors! Please verify your URLs.');
-  if (isDebug) console.log(URLWithPriceCollection);
-
-  const productWithPriceCollection = await getProductWithPriceCollection(
-    URLWithPriceCollection
-  );
-  if (isDebug) console.log(productWithPriceCollection);
-  if (productWithPriceErrors) console.log(productWithPriceErrors);
-
-  for (const { product, price } of productWithPriceCollection) {
-    await etsyPuppeteer.publishAmazonProduct(product, 'Coloring Books', price);
+  const scrapingTasks = getScrapingTasks('../urls.txt');
+  const scrapingTasksMap: { [url: string]: ScrapingTask } = {};
+  for (const scrapingTask of scrapingTasks) {
+    scrapingTasksMap[scrapingTask.url] = scrapingTask;
   }
-  await etsyPuppeteer.closeBrowserAsync();
-  process.exit(0);
-}
+  scrapingDashboard.init(scrapingTasks);
 
-async function getURLWithPriceCollection(txtDir: string) {
-  const absolutePath = path.resolve(txtDir);
-  if (fs.existsSync(absolutePath) == false) return;
-
-  const lines = fs.readFileSync(absolutePath, { encoding: 'utf8' }).split('\n');
-  if (lines.length == 0) return;
-
-  let URLWithPriceCollection: URLWithPrice[] = lines.map((line) => {
-    const split = line.split(' ');
-    return { url: split[1].trim(), price: split[0] };
-  });
-  URLWithPriceCollection = URLWithPriceCollection.filter(
-    (obj) => isNaN(+obj.price) == false && isURL(obj.url)
-  );
-  return [...new Set(URLWithPriceCollection)];
-}
-
-async function getProductWithPriceCollection(
-  URLWithPriceCollection: URLWithPrice[]
-) {
-  const productWithPriceCollection: ProductWithPrice[] = [];
-  for (let i = 0; i < URLWithPriceCollection.length; i++) {
-    const { url, price } = URLWithPriceCollection[i];
+  const imagePromises: Promise<void>[] = [];
+  const bookProducts: BookProduct[] = [];
+  for (const url of scrapingTasks.map((task) => task.url)) {
     try {
-      const product = await amazonPuppeteer.scrapeProduct(url);
-      await Promise.all(
-        product.images.map((image) => {
+      const product = await amazonPuppeteer.scrapeProductAsync(url);
+      imagePromises.push(
+        ...product.images.map((image) => {
           image.resize({ width: 2000 });
           return image.saveAsync('../tmp');
         })
       );
-      productWithPriceCollection.push({ price, product });
+      bookProducts.push(product);
+      scrapingTasksMap[url].update(product.title, statusEnum.downloaded);
     } catch (error) {
-      productWithPriceErrors.push({ url, error });
+      scrapingTasksMap[url].update(url, statusEnum.failed);
     }
   }
-  await amazonPuppeteer.closeBrowserAsync();
-  return productWithPriceCollection;
+  await Promise.all(imagePromises);
+  await amazonPuppeteer.browser?.close();
+  console.log(bookProducts);
+  if (process.env.NODE_ENV == 'dev') return;
+
+  for (const bookProduct of bookProducts) {
+    const scrapingTask = scrapingTasksMap[bookProduct.url];
+    try {
+      await etsyPuppeteer.publishBookProduct(
+        bookProduct,
+        'Coloring Book',
+        scrapingTask.price
+      );
+      scrapingTask.update(bookProduct.title, statusEnum.succeded);
+    } catch (error) {
+      scrapingTask.update(bookProduct.title, statusEnum.failed);
+    }
+  }
+  await etsyPuppeteer.browser?.close();
+  process.exit();
 }
 
-interface URLWithPrice {
-  url: string;
-  price: string;
+function errorExit(message: string) {
+  console.log(chalkUtils.error(message));
+  process.exit();
 }
 
-interface ProductWithPrice {
-  product: AmazonProduct;
-  price: string;
+function getScrapingTasks(textPath: string) {
+  const textLines = getTextLines(textPath);
+  const scrapeTasks = textLines.map((line) => {
+    const split = line.split(' ');
+    const price = split[0];
+    const url = split[1]?.trim();
+    console.log([line, price, url]);
+    if (isNaN(+price) || isURL(url) == false) errorExit('List has errors');
+    return new ScrapingTask(price, url);
+  });
+  return [...new Set(scrapeTasks)];
+}
+
+function getTextLines(textPath: string) {
+  const absolutePath = path.resolve(textPath);
+  if (fs.existsSync(absolutePath) == false)
+    errorExit(`"${chalkUtils.dir(absolutePath)}" does not exist !`);
+  const textLines = fs
+    .readFileSync(absolutePath, { encoding: 'utf8' })
+    .trim()
+    .split('\n');
+  if (textLines.join('') === '')
+    errorExit(`${chalkUtils.dir(absolutePath)} is empty !`);
+  return textLines;
 }
