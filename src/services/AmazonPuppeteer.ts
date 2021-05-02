@@ -43,9 +43,10 @@ async function setupBrowserAsync() {
 async function getBookProductAsync(page: Page, url: string) {
   await page.goto(url, { waitUntil: 'networkidle0' });
 
-  const title =
+  const rawTitle =
     // @ts-ignore
     (await page.$eval('#productTitle', (el) => el.innerText.trim())) || '';
+  const title = rawTitle.replace(/(\^|\$)/g, '').slice(0, 140);
 
   const rawDetails = await page.$eval('#detailBullets_feature_div', (el) =>
     // @ts-ignore
