@@ -57,7 +57,6 @@ async function main() {
   }
   await Promise.all(imagePromises);
   await amazonPuppeteer.browser?.close();
-  console.log(bookProducts);
   if (process.env.NODE_ENV == 'dev') return;
 
   for (const bookProduct of bookProducts) {
