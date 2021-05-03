@@ -17,7 +17,7 @@ export async function publishBookProduct(
   category: string,
   price: string
 ) {
-  await setupBrowserAsync();
+  if (browser == null) await setupBrowserAsync();
   const page = await browser!.newPage();
   await page.goto(
     'https://www.etsy.com/your/listings/create?ref=listings_manager_prototype&from_page=/your/listings',
