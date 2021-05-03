@@ -5,7 +5,6 @@ import * as scrapingDashboard from './services/scrapingDashboard';
 import * as sentry from '@sentry/node';
 import dotenv from 'dotenv';
 import fs from 'fs';
-import isURL from './utils/isURL';
 import path from 'path';
 import ScrapingTask, { statusEnum } from './services/ScrapingTask';
 import { BookProduct } from './models/BookProduct';
@@ -26,6 +25,7 @@ if (process.env.NODE_ENV != 'dev') {
   sentry.init({
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 1.0,
+    debug: false,
   });
 }
 
@@ -94,9 +94,15 @@ function getScrapingTasks(textPath: string) {
     const price = split[0];
     const url = split[1]?.trim();
     console.log([line, price, url]);
-    if (isNaN(+price) || isURL(url) == false) errorExit('List has errors');
+    if (
+      isNaN(+price) ||
+      /https+:\/\/www.amazon.com\/.*\/dp\/[0-9]{10}\/.*/.test(url) == false
+    )
+      return new ScrapingTask(price, url, { hasURLError: true });
+
     return new ScrapingTask(price, url);
   });
+
   return [...new Set(scrapeTasks)];
 }
 

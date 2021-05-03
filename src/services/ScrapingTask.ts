@@ -11,20 +11,28 @@ export default class ScrapingTask {
 
   public readonly price: string;
   public readonly url: string;
+
+  private hasURLError: boolean;
   private dashboard: Dashboard | undefined;
   private draft: consoleDraft | undefined;
 
-  constructor(price: string, url: string) {
+  constructor(
+    price: string,
+    url: string,
+    { hasURLError } = { hasURLError: false }
+  ) {
     this.price = price;
     this.url = url;
+    this.hasURLError = hasURLError;
   }
-
-  public static getStatusDisplay(status: statusEnum) {}
 
   public setupDraft(dashboard: Dashboard) {
     this.dashboard = dashboard;
     this.draft = console.draft();
-    this.update(this.url, statusEnum.pending);
+    this.update(
+      this.url,
+      this.hasURLError ? statusEnum.failed : statusEnum.pending
+    );
   }
 
   public update(name: string, status: statusEnum) {
@@ -48,7 +56,8 @@ export default class ScrapingTask {
         this.dashboard.succeded.update();
         break;
       case statusEnum.failed:
-        this.draft(`${displayingName} ${chalkUtils.error(' Failed ')}`);
+        const error = this.hasURLError ? ' URL ERROR ' : ' Failed ';
+        this.draft(`${displayingName} ${chalkUtils.error(error)}`);
         this.dashboard.failed.update();
         break;
     }
