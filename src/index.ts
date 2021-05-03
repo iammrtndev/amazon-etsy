@@ -29,7 +29,10 @@ if (process.env.NODE_ENV != 'dev') {
   });
 }
 
-main();
+main().catch((error) => {
+  sentry.captureException(error);
+  errorExit();
+});
 
 async function main() {
   if (await dectectRunningAsync('chrome.exe'))
@@ -57,7 +60,7 @@ async function main() {
       scrapingTasksMap[url].update(product.title, statusEnum.downloaded);
     } catch (error) {
       scrapingTasksMap[url].update(url, statusEnum.failed);
-      throw error;
+      sentry.captureException(error);
     }
   }
   await Promise.all(imagePromises);
@@ -75,15 +78,15 @@ async function main() {
       scrapingTask.update(bookProduct.title, statusEnum.succeded);
     } catch (error) {
       scrapingTask.update(bookProduct.title, statusEnum.failed);
-      throw error;
+      sentry.captureException(error);
     }
   }
   await etsyPuppeteer.browser?.close();
   process.exit();
 }
 
-function errorExit(message: string) {
-  console.log(chalkUtils.error(` ${message} `));
+function errorExit(message: String = '') {
+  if (message != '') console.log(chalkUtils.error(` ${message} `));
   process.exit();
 }
 
