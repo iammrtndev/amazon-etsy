@@ -39,11 +39,14 @@ async function main() {
     errorExit('Chrome is open. Please close it and try again');
 
   const scrapingTasks = getScrapingTasks('../urls.txt');
+  scrapingDashboard.init(scrapingTasks);
+
   const scrapingTasksMap: { [url: string]: ScrapingTask } = {};
-  for (const scrapingTask of scrapingTasks) {
+  for (const scrapingTask of scrapingTasks.filter(
+    (task) => task.hasURLError == false
+  )) {
     scrapingTasksMap[scrapingTask.url] = scrapingTask;
   }
-  scrapingDashboard.init(scrapingTasks);
 
   const imagePromises: Promise<void>[] = [];
   const bookProducts: BookProduct[] = [];
@@ -99,7 +102,7 @@ function getScrapingTasks(textPath: string) {
     console.log([line, price, url]);
     if (
       isNaN(+price) ||
-      /https+:\/\/www.amazon.com\/.*\/dp\/[0-9]{10}\/.*/.test(url) == false
+      /https+:\/\/www.amazon.com\/.*\/dp\/.{10}\/.*/.test(url) == false
     )
       return new ScrapingTask(price, url, { hasURLError: true });
 

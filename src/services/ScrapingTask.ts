@@ -11,8 +11,8 @@ export default class ScrapingTask {
 
   public readonly price: string;
   public readonly url: string;
+  public readonly hasURLError: boolean;
 
-  private hasURLError: boolean;
   private dashboard: Dashboard | undefined;
   private draft: consoleDraft | undefined;
 
