@@ -9,23 +9,14 @@ import path from 'path';
 import ScrapingTask, { statusEnum } from './services/ScrapingTask';
 import { BookProduct } from './models/BookProduct';
 import { dectectRunningAsync } from './utils/processUtils';
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-declare global {
-  namespace NodeJS {
-    interface Global {
-      __rootdir__: string;
-    }
-  }
-}
-
-if (process.env.NODE_ENV != 'dev') {
-  global.__rootdir__ = __dirname || process.cwd();
+if (process.env.NODE_ENV == 'dev') {
   if (process.env.SENTRY_DSN == null) errorExit('SENTRY_DSN is null');
   sentry.init({
     dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'production',
     tracesSampleRate: 1.0,
-    debug: false,
   });
 }
 
@@ -99,7 +90,6 @@ function getScrapingTasks(textPath: string) {
     const split = line.split(' ');
     const price = split[0];
     const url = split[1]?.trim();
-    console.log([line, price, url]);
     if (
       isNaN(+price) ||
       /https+:\/\/www.amazon.com\/.*\/dp\/.{10}\/.*/.test(url) == false
