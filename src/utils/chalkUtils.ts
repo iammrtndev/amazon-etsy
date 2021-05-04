@@ -13,7 +13,7 @@ export function info(str: string) {
 }
 
 export function warning(str: string) {
-  return chalk.bgYellow.bold(str);
+  return chalk.bgYellowBright.bold(str);
 }
 
 export function dir(str: string) {

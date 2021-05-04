@@ -11,7 +11,7 @@ import { BookProduct } from './models/BookProduct';
 import { dectectRunningAsync } from './utils/processUtils';
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-if (process.env.NODE_ENV == 'dev') {
+if (process.env.NODE_ENV != 'dev') {
   if (process.env.SENTRY_DSN == null) errorExit('SENTRY_DSN is null');
   sentry.init({
     dsn: process.env.SENTRY_DSN,
