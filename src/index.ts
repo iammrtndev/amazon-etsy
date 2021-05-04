@@ -9,7 +9,7 @@ import path from 'path';
 import ScrapingTask, { statusEnum } from './services/ScrapingTask';
 import { BookProduct } from './models/BookProduct';
 import { dectectRunningAsync } from './utils/processUtils';
-dotenv.config();
+dotenv.config({ path: '../.env' });
 
 declare global {
   namespace NodeJS {
