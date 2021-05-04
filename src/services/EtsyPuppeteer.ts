@@ -19,23 +19,27 @@ export async function publishBookProduct(
 ) {
   if (browser == null) await setupBrowserAsync();
   const page = await browser!.newPage();
-  await page.goto(
-    'https://www.etsy.com/your/listings/create?ref=listings_manager_prototype&from_page=/your/listings',
-    {
-      waitUntil: 'networkidle2',
-    }
-  );
-
-  await uploadImages(page, bookProduct);
-  await fillTitle(bookProduct, page);
-  await selectDetailsOptions(page);
-  await fillCategory(page, category);
-  await fillDescription(bookProduct, page);
-  await selectManualRenew(page);
-  await fillPrice(page, price);
-  await selectShipOptions(page);
-  await clickSave(page);
-  await page.close();
+  try {
+    await page.goto(
+      'https://www.etsy.com/your/listings/create?ref=listings_manager_prototype&from_page=/your/listings',
+      {
+        waitUntil: 'networkidle0',
+      }
+    );
+    await uploadImages(page, bookProduct);
+    await fillTitle(bookProduct, page);
+    await selectDetailsOptions(page);
+    await fillCategory(page, category);
+    await fillDescription(bookProduct, page);
+    await selectManualRenew(page);
+    await fillPrice(page, price);
+    await selectShipOptions(page);
+    await clickSave(page);
+  } catch (error) {
+    throw error;
+  } finally {
+    await page.close();
+  }
 }
 
 async function setupBrowserAsync() {
