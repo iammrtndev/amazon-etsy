@@ -12,21 +12,18 @@ export async function scrapeProductAsync(url: string) {
 
   try {
     const bookProduct = await getBookProductAsync(page, url);
-
-    const amazonImageURLs: string[] = await getAmazonImageURLs(page);
+    const amazonImageURLs: string[] = await getAmazonImageURLsAsync(page);
     if (amazonImageURLs.length == 0)
       throw new Error('Could not find an image for the product ');
+    await page.close();
 
-    bookProduct.images = await downloadImages(
+    bookProduct.images = await downloadImagesAsync(
       amazonImageURLs,
       bookProduct.title
     );
-
     return bookProduct;
   } catch (error) {
     throw error;
-  } finally {
-    await page.close();
   }
 }
 
@@ -66,23 +63,23 @@ async function getBookProductAsync(page: Page, url: string) {
   return new BookProduct(url, title, `${description}\n\n${details}`);
 }
 
-async function getAmazonImageURLs(page: Page) {
+async function getAmazonImageURLsAsync(page: Page) {
   const hasPreview = (await page.$('#sitbLogoImg')) != null;
   return hasPreview == true
-    ? await getProductPreviewImageURLs(page)
-    : await getProductImageURLs(page);
+    ? await getPreviewImageURLsAsync(page)
+    : await getImageURLsAsync(page);
 }
 
-async function getProductPreviewImageURLs(page: Page) {
+async function getPreviewImageURLsAsync(page: Page) {
   await page.click('#main-image-container');
   await page.waitForTimeout(6000);
   const hasModernVersion = (await page.$('#litb-read-frame')) != null;
   return hasModernVersion == true
-    ? await getProductModernPreviewImageURLs(page)
-    : await getProductOldPreviewImageURLs(page);
+    ? await getModernPreviewImageURLsAsync(page)
+    : await getOldPreviewImageURLsAsync(page);
 }
 
-async function getProductModernPreviewImageURLs(page: Page) {
+async function getModernPreviewImageURLsAsync(page: Page) {
   const frameHandle = await page.$('#litb-read-frame');
   if (frameHandle == null) return [];
   const frame = await frameHandle.contentFrame();
@@ -103,7 +100,7 @@ async function getProductModernPreviewImageURLs(page: Page) {
   return [...new Set(imageURLs)];
 }
 
-async function getProductOldPreviewImageURLs(page: Page) {
+async function getOldPreviewImageURLsAsync(page: Page) {
   const imageURLs: string[] = [];
   const sectionButtons = await page.$$('.sitbReader-bookmark');
   for (const button of sectionButtons) {
@@ -118,7 +115,7 @@ async function getProductOldPreviewImageURLs(page: Page) {
   return [...new Set(imageURLs)];
 }
 
-async function getProductImageURLs(page: Page) {
+async function getImageURLsAsync(page: Page) {
   await page.click('.thumb-text.thumb');
   await page.waitForTimeout(6000);
   const imageURLs: string[] = await page.$$eval('.ig-thumb-image img', (imgs) =>
@@ -128,7 +125,7 @@ async function getProductImageURLs(page: Page) {
   return [...new Set(imageURLs)];
 }
 
-async function downloadImages(imageURLs: string[], bookTitle: string) {
+async function downloadImagesAsync(imageURLs: string[], bookTitle: string) {
   const imagePromises: Promise<JPGImage>[] = [];
   for (let i = 0; i < imageURLs.length; i++) {
     const name =
