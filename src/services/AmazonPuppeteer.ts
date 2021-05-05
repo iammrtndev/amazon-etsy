@@ -5,17 +5,16 @@ import { BookProduct } from '../models/BookProduct';
 import JPGImage from './JPGImage';
 
 export let browser: Browser | undefined;
+let page: Page | undefined;
 
 export async function scrapeProductAsync(url: string) {
   if (browser == null) await setupBrowserAsync();
-  const page = await browser!.newPage();
 
   try {
-    const bookProduct = await getBookProductAsync(page, url);
-    const amazonImageURLs: string[] = await getAmazonImageURLsAsync(page);
+    const bookProduct = await getBookProductAsync(page!, url);
+    const amazonImageURLs: string[] = await getAmazonImageURLsAsync(page!);
     if (amazonImageURLs.length == 0)
       throw new Error('Could not find an image for the product ');
-    await page.close();
 
     bookProduct.images = await downloadImagesAsync(
       amazonImageURLs,
@@ -35,6 +34,7 @@ async function setupBrowserAsync() {
       '--disable-features=IsolateOrigins,site-per-process',
     ],
   });
+  page = await browser!.newPage();
 }
 
 async function getBookProductAsync(page: Page, url: string) {
