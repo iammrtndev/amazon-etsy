@@ -3,17 +3,19 @@ import * as chalkUtils from './utils/chalkUtils';
 import * as etsyPuppeteer from './services/etsyPuppeteer';
 import * as scrapingDashboard from './services/scrapingDashboard';
 import * as sentry from '@sentry/node';
+import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import ScrapingTask, { statusEnum } from './services/ScrapingTask';
 import { BookProduct } from './models/BookProduct';
 import { dectectRunningAsync } from './utils/processUtils';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-if (process.env.NODE_ENV == 'production') {
+if (process.env.NODE_ENV != 'dev') {
   if (process.env.SENTRY_DSN == null) errorExit('SENTRY_DSN is null');
-
   sentry.init({
     dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'production',
     tracesSampleRate: 1.0,
   });
 }
